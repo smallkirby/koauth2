@@ -1,5 +1,13 @@
 package com.github.smallkirby.koauth2
 
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import io.ktor.server.testing.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -33,6 +41,18 @@ class AccessTokenTest {
         ) as AccessToken
     }
 
+    private fun ApplicationTestBuilder.mockAuthServer() {
+        externalServices {
+            hosts("https://google.com") {
+                routing {
+                    get("/") {
+                        call.respond("Mocked Google!")
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     fun testAccessTokenFromJson() {
         val responseJsonString = """
@@ -55,5 +75,14 @@ class AccessTokenTest {
             ),
             accessToken
         )
+    }
+
+    @Test
+    fun testKtorMockHealth() = testApplication {
+        mockAuthServer()
+
+        val response = client.get("https://google.com")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("Mocked Google!", response.bodyAsText())
     }
 }
