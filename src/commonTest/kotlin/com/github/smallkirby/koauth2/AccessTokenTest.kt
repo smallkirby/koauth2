@@ -7,7 +7,8 @@ import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.server.testing.*
+import io.ktor.server.testing.ApplicationTestBuilder
+import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -74,6 +75,21 @@ class AccessTokenTest {
                 refreshToken = "tGzv3JOkF0XG5Qx2TlKWIA",
             ),
             accessToken
+        )
+
+        // Check expiration
+        assertEquals(
+            false,
+            accessToken.expired(),
+        )
+
+        assertEquals(
+            false,
+            accessToken.expiresIn(30),
+        )
+        assertEquals(
+            true,
+            accessToken.expiresIn(3700),
         )
     }
 

@@ -9,6 +9,11 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
+
+typealias Seconds = Int
 
 /**
  * Response for the access token request
@@ -27,14 +32,23 @@ class AccessToken private constructor(
     @SerialName("token_type")
     private val tokenType: TokenType,
     @SerialName("expires_in")
-    private val expiresIn: Int? = null,
+    private val expiresIn: Seconds? = null,
     @SerialName("expires_at")
-    private val expiresAt: Int? = null,
+    @Serializable(with = DateSerializer::class)
+    private var expiresAt: Date? = null,
     @SerialName("refresh_token")
     private val refreshToken: String? = null,
     @SerialName("scope")
     private val scope: List<String> = mutableListOf(),
 ) {
+    init {
+        if (expiresIn != null && expiresAt == null) {
+            expiresAt = Date().apply {
+                time += expiresIn * 1000
+            }
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is AccessToken) return false
@@ -42,8 +56,6 @@ class AccessToken private constructor(
         if (
             accessToken != other.accessToken ||
             tokenType != other.tokenType ||
-            expiresIn != other.expiresIn ||
-            expiresAt != other.expiresAt ||
             refreshToken != other.refreshToken ||
             scope != other.scope
         ) {
@@ -57,13 +69,37 @@ class AccessToken private constructor(
         var result = accessToken.hashCode()
         result = 31 * result + tokenType.hashCode()
         result = 31 * result + (expiresIn ?: 0)
-        result = 31 * result + (expiresAt ?: 0)
+        result = 31 * result + (expiresAt?.hashCode() ?: 0)
         result = 31 * result + (refreshToken?.hashCode() ?: 0)
         result = 31 * result + scope.hashCode()
         return result
     }
 
+    fun expiresIn(expirationWindow: Seconds): Boolean? {
+        val expiresAt = expiresAt ?: return null
+        val now = (System.currentTimeMillis() / 1000).toInt()
+        return expiresAt.time / 1000 - now < expirationWindow
+    }
+
+    fun expired() = expiresIn(0)
+
     companion object {
+        private class DateSerializer : KSerializer<Date> {
+            private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+
+            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.STRING)
+
+            override fun serialize(encoder: Encoder, value: Date) {
+                encoder.encodeString(value.toString())
+            }
+
+            override fun deserialize(decoder: Decoder): Date {
+                return formatter.parse(decoder.decodeString())
+            }
+        }
+
         @Serializable(with = TokenTypeSerializer::class)
         enum class TokenType(val value: String) {
             BEARER("Bearer"),
