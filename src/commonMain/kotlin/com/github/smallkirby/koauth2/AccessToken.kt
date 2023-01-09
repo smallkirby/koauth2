@@ -28,16 +28,16 @@ typealias Seconds = Int
 @Serializable
 class AccessToken private constructor(
     @SerialName("access_token")
-    private val accessToken: String,
+    val accessToken: String,
     @SerialName("token_type")
-    private val tokenType: TokenType,
+    val tokenType: TokenType,
+    @SerialName("refresh_token")
+    val refreshToken: String? = null,
     @SerialName("expires_in")
-    private val expiresIn: Seconds? = null,
+    val expiresIn: Seconds? = null,
     @SerialName("expires_at")
     @Serializable(with = DateSerializer::class)
     private var expiresAt: Date? = null,
-    @SerialName("refresh_token")
-    private val refreshToken: String? = null,
     @SerialName("scope")
     private val scope: List<String> = mutableListOf(),
 ) {

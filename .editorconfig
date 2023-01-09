@@ -1,0 +1,8 @@
+root = true
+
+[*.{kt,kts}]
+ktlint_code_style = official
+insert_final_newline = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+
+disabled_rules = no-wildcard-imports

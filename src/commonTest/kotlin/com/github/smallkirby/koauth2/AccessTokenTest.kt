@@ -35,9 +35,9 @@ class AccessTokenTest {
         return constructor.newInstance(
             accessToken,
             tokenType,
+            refreshToken,
             expiresIn,
             expiresAt,
-            refreshToken,
             scope,
         ) as AccessToken
     }

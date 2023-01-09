@@ -31,7 +31,9 @@ kotlin {
     }
 
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        debug.set(true)
+        version.set("0.44.0")
+        verbose.set(true)
+        additionalEditorconfigFile.set(file(".editorconfig"))
     }
 
     jvm {
